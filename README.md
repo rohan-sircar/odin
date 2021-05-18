@@ -1,10 +1,19 @@
+Note: this branch is just the PR by @mprevel https://github.com/valskalla/odin/pull/162
+updated to a newer master commit, that I had used in one of my my scala.js projects but
+never uploaded before. All credits for these changes go to him, in my dumbness I
+accidentally merged his branch into master, instead of the other way aroundn and the
+commits got squashed.
+
+So here it is, original description as follows:
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/valskalla/odin/master/logo.png" width="500px" />  
   <br/>
-  <i>The god of poetry (also battles, fights and other side effects)</i>
+  <i>The god of poetry (also (rap) battles, fights and other side effects)</i>
 </p>
 
-----
+---
+
 [![Build Status](https://img.shields.io/github/workflow/status/valskalla/odin/Scala%20CI)](https://github.com/valskalla/odin/actions)
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.valskalla/odin-core_2.13)](https://search.maven.org/search?q=com.github.valskalla)
 [![Codecov](https://img.shields.io/codecov/c/github/valskalla/odin)](https://codecov.io/gh/valskalla/odin)
@@ -25,8 +34,7 @@ top priorities.
 Standing on the shoulders of `cats-effect` type classes, Odin abstracts away from concrete effect types, allowing
 users to decide what they feel comfortable with: `IO`, `ZIO`, `monix.Task`, `ReaderT` etc. The choice is yours.
 
-Setup
----
+## Setup
 
 Odin is published to Maven Central and cross-built for Scala 2.12 and 2.13. Add the following lines to your build:
 
@@ -38,10 +46,10 @@ libraryDependencies ++= Seq(
 ).map(_ % "0.9.1")
 ```
 
-Example
----
+## Example
 
 Using `IOApp`:
+
 ```scala
 import cats.effect.{ExitCode, IO, IOApp}
 import io.odin._
@@ -57,16 +65,16 @@ object Simple extends IOApp {
 ```
 
 Once application starts, it prints:
+
 ```
 2019-11-25T22:00:51 [ioapp-compute-0] INFO io.odin.examples.HelloWorld.run:15 - Hello world
 ```
 
 Check out [examples](https://github.com/valskalla/odin/tree/master/examples) directory for more
 
-Effects out of the box
----
+## Effects out of the box
 
-Some time could be saved by using the effect-predefined variants of Odin. There are options for ZIO and Monix users: 
+Some time could be saved by using the effect-predefined variants of Odin. There are options for ZIO and Monix users:
 
 ```scala
 //ZIO
@@ -83,14 +91,17 @@ import io.odin.zio._
 import io.odin.monix._
 ```
 
-Documentation
----
+## Documentation
 
+- [Setup](#setup)
+- [Example](#example)
+- [Effects out of the box](#effects-out-of-the-box)
+- [Documentation](#documentation)
 - [Logger interface](#logger-interface)
 - [Render](#render)
 - [Console logger](#console-logger)
 - [Formatter](#formatter)
-  - [JSON formatter](#json-formatter)
+  - [JSON Formatter](#json-formatter)
   - [Customized formatter](#customized-formatter)
 - [Minimal level](#minimal-level)
 - [File logger](#file-logger)
@@ -105,10 +116,14 @@ Documentation
 - [ToThrowable](#tothrowable)
 - [Testing logger](#testing-logger)
 - [Extras](#extras)
-  - [Conditional Logging](#extras-conditional-logging)
-  - [Derivation](#extras-derivation)
-- [SL4FJ bridge](#slf4j-bridge)
+  - [Extras. Conditional logging](#extras-conditional-logging)
+  - [Extras. Derivation](#extras-derivation)
+- [SLF4J bridge](#slf4j-bridge)
 - [Benchmarks](#benchmarks)
+- [Adopters](#adopters)
+- [Contributing](#contributing)
+- [Acknowledgements](#acknowledgements)
+- [License](#license)
 
 ## Logger interface
 
@@ -116,7 +131,7 @@ Odin's logger interface looks like following:
 
 ```scala
 trait Logger[F[_]] {
-  
+
   def trace[M](msg: => M)(implicit render: Render[M], position: Position): F[Unit]
 
   def trace[M, E](msg: => M, t: E)(implicit render: Render[M], tt: ToThrowable[E], position: Position): F[Unit]
@@ -133,7 +148,7 @@ Each method returns `F[Unit]`, so most of the time effects are suspended in the 
 
 **It's important to keep in memory** that effects like `IO`, `ZIO`, `Task` etc are lazily evaluated, therefore calling
 the logger methods isn't enough to emit the actual log. User has to to combine log operations with the rest of code
-using plead of options: `for ... yield` comprehension, `flatMap/map` or `>>/*>` operators from cats library. 
+using plead of options: `for ... yield` comprehension, `flatMap/map` or `>>/*>` operators from cats library.
 
 Particularly interesting are the implicit arguments: `Position`, [`Render[M]`](#render), and [`ToThrowable[E]`](#tothrowable).
 
@@ -249,6 +264,7 @@ It's possible to configure minimal level of logs to print (_TRACE_ by default) a
 
 In Odin, formatters are responsible for rendering `LoggerMessage` data type into `String`.
 `LoggerMessage` carries the information about :
+
 - Level of the log
 - Context
 - Optional exception
@@ -284,7 +300,7 @@ Library _odin-json_ enables output of logs as newline-delimited JSON records:
 import io.odin.json.Formatter
 
 val jsonLogger = consoleLogger[IO](formatter = Formatter.json)
-``` 
+```
 
 Now messages printed with this logger will be encoded as JSON string using circe:
 
@@ -304,9 +320,9 @@ object Formatter {
 ```
 
 - [`ThrowableFormat`](https://github.com/valskalla/odin/blob/master/core/src/main/scala/io/odin/formatter/options/ThrowableFormat.scala)
-allows to tweak the rendering of exceptions, specifically indentation and stack depth.
+  allows to tweak the rendering of exceptions, specifically indentation and stack depth.
 - [`PositionFormat`](https://github.com/valskalla/odin/blob/master/core/src/main/scala/io/odin/formatter/options/PositionFormat.scala)
-allows to tweak the rendering of position.
+  allows to tweak the rendering of position.
 - `colorful` flag enables logs highlighting.
 - `printCtx` flag enables log context printer
 
@@ -356,7 +372,7 @@ file.use { logger =>
 ```
 
 Usual pattern here is to compose and allocate such resources during the start of your program and wrap execution of
-the logic inside of `.use` block.  
+the logic inside of `.use` block.
 
 **Important notice**: this logger doesn't buffer and tries to flush to the file on each log due to the safety guarantees.
 Consider to use `asyncFileLogger` version with almost the same signature (except the `Concurrent[F]` constraint)
@@ -364,7 +380,7 @@ to achieve the best performance.
 
 ### Rolling file logger
 
-Beside the basic file logger, Odin provides a rolling one to rollover log files. Rollover can be triggered by exceeding 
+Beside the basic file logger, Odin provides a rolling one to rollover log files. Rollover can be triggered by exceeding
 a configured log file size and/or timer, whichever happens first if set:
 
 ```scala
@@ -394,6 +410,7 @@ val fileName = fileNamePattern(LocalDateTime.now)
 ```
 
 Interpolator placeholders used above are provided with `io.odin.config` package as well:
+
 ```scala
 year.extract(LocalDateTime.now)
 // res6: String = "2020"
@@ -434,7 +451,7 @@ val asyncLoggerResource: Resource[IO, Logger[IO]] = consoleLogger[IO]().withAsyn
 
 `Resource[F, Logger[F]]` is used to properly initialize the log buffer and flush it on the release. Therefore, use of
 async logger shall be done inside of `Resource.use` block:
- 
+
 ```scala
 //queue will be flushed on release even if flushing timer didn't hit the mark yet
 asyncLoggerResource.use(logger => logger.info("Async info")).unsafeRunSync()
@@ -447,6 +464,7 @@ The immediate gain is the acquire/release safety provided by `Resource` abstract
 as well as controllable in-memory buffering for logs before they're flushed down the stream.
 
 Definition of `withAsync` is following:
+
 ```scala
 def withAsync(
         timeWindow: FiniteDuration = 1.millis,
@@ -455,13 +473,14 @@ def withAsync(
 ```
 
 Following parameters are configurable if default ones don't fit:
+
 - Time period between flushed, default is 1 millisecond
 - Maximum underlying buffer size, by default buffer is unbounded.
 
 ## Class and enclosure routing
 
 Users have an option to use different loggers for different classes, packages and even function enclosures.
-I.e. it could be applied to silence some particular class applying stricter minimal level requirements.  
+I.e. it could be applied to silence some particular class applying stricter minimal level requirements.
 
 Class based routing works with the help of `classOf` function:
 
@@ -565,7 +584,8 @@ consoleLogger[M]()
 Odin automatically derives required type classes for each type `F[_]` that has `Ask[F, E]` defined, or in other words
 for all the types that allow `F[A] => F[E]`.
 
-If this constraint isn't satisfied, it's required to manually provide an instance for `WithContext` type class:  
+If this constraint isn't satisfied, it's required to manually provide an instance for `WithContext` type class:
+
 ```scala
 /**
   * Resolve context stored in `F[_]` effect
@@ -625,7 +645,7 @@ def trace[M, E](msg: => M, ctx: Map[String, String], t: E)(implicit render: Rend
 ```
 
 Given the implicit constraint `ToThrowable` it's possible to log any error of type `E` as far as it satisfies this constraint by providing
-an implicit instance of the following interface: 
+an implicit instance of the following interface:
 
 ```scala
 /**
@@ -644,7 +664,7 @@ of a corresponding type error type `E`.
 One of the main benefits of a polymorphic `Logger[F]` interface that exposes `F[Unit]` methods is a simple way to
 test that the application correctly writes logs.
 
-Since every operation represents a value instead of no-op side effect, it's possible to check those values in specs. 
+Since every operation represents a value instead of no-op side effect, it's possible to check those values in specs.
 
 Odin provides a class `WriterTLogger[F]` out of the box to test logging using `WriterT` monad.
 Check out [examples](https://github.com/valskalla/odin/tree/master/examples/src/main/scala/io/odin/examples/SimpleApp.scala) for more information.
@@ -678,10 +698,10 @@ class UserService[F[_]: Clock: ContextShift](logger: Logger[F])(implicit F: Conc
   import cats.syntax.functor._
   import cats.syntax.flatMap._
 
-  private val BadSuffix = "bad-user" 
-  
-  def findAndVerify(userId: String): F[Unit] = 
-    logger.withErrorLevel(Level.Debug) { log => 
+  private val BadSuffix = "bad-user"
+
+  def findAndVerify(userId: String): F[Unit] =
+    logger.withErrorLevel(Level.Debug) { log =>
       for {
         _ <- log.debug(s"Looking for user by id [$userId]")
         user <- findUser(userId)
@@ -691,10 +711,10 @@ class UserService[F[_]: Clock: ContextShift](logger: Logger[F])(implicit F: Conc
       } yield ()
     }
 
-  private def findUser(userId: String): F[User] = 
+  private def findUser(userId: String): F[User] =
     F.delay(User(s"my-user-$userId"))
-  
-  private def verify(user: User): F[Unit] = 
+
+  private def verify(user: User): F[Unit] =
     F.whenA(user.id.endsWith(BadSuffix)) {
       F.raiseError(new RuntimeException("Bad User"))
     }
@@ -719,8 +739,9 @@ service.findAndVerify("bad-user").attempt.unsafeRunSync()
 
 `io.odin.extras.derivation.render` provides a Magnolia-based derivation of the `Render` type class.
 
-The derivation can be configured via annotations: 
-* @rendered(includeMemberName = false)
+The derivation can be configured via annotations:
+
+- @rendered(includeMemberName = false)
 
 The member names will be omitted:
 
@@ -729,23 +750,26 @@ The member names will be omitted:
 case class ApiConfig(uri: String, apiKey: String)
 ```
 
-* @hidden
+- @hidden
 
 Excludes an annotated member from the output:
+
 ```scala
 case class ApiConfig(uri: String, @hidden apiKey: String)
 ```
 
-* @secret
+- @secret
 
 Replaces the value of an annotated member with `<secret>` :
+
 ```scala
 case class ApiConfig(uri: String, @secret apiKey: String)
 ```
 
-* @length
+- @length
 
 Shows only first N elements of the iterable. Works exclusively with subtypes of `Iterable`:
+
 ```scala
 case class ApiConfig(uri: String, @hidden apiKey: String, @length(2) environments: List[String])
 ```
@@ -782,10 +806,13 @@ In case if some dependencies in the project use SL4J as a logging API, it's poss
 It requires a two-step setup:
 
 - Add following dependency to your build:
+
 ```scala
 libraryDependencies += "com.github.valskalla" %% "odin-slf4j" % "0.9.1"
 ```
+
 - Create Scala class `ExternalLogger` somewhere in the project:
+
 ```scala
 import cats.effect.{Clock, Effect, IO}
 import io.odin._
@@ -797,7 +824,7 @@ class ExternalLogger extends OdinLoggerBinder[IO] {
 
   implicit val F: Effect[IO] = IO.ioEffect
   implicit val clock: Clock[IO] = Clock.create
-    
+
   val loggers: PartialFunction[String, Logger[IO]] = {
     case "some.external.package.SpecificClass" =>
       consoleLogger[IO](minLevel = Level.Warn) //disable noisy external logs
@@ -808,6 +835,7 @@ class ExternalLogger extends OdinLoggerBinder[IO] {
 ```
 
 - Create `StaticLoggerBinder.java` class in the package `org.slf4j.impl` with the following content:
+
 ```java
 package org.slf4j.impl;
 
@@ -826,10 +854,10 @@ public class StaticLoggerBinder extends ExternalLogger {
 }
 ```
 
-Latter is required for SL4J API to load it in runtime and use as a binder for `LoggerFactory`. All the logic is 
+Latter is required for SL4J API to load it in runtime and use as a binder for `LoggerFactory`. All the logic is
 encapsulated in `ExternalLogger` class, so the Java part here is required only for bootstrapping.  
 Partial function is used as a factory router to load correct logger backend. On undefined case the no-op logger is provided by default,
-so no logs are recorded. 
+so no logs are recorded.
 
 This bridge doesn't support MDC.
 
@@ -841,11 +869,12 @@ with existing mature solutions.
 
 Following [benchmark](https://github.com/valskalla/odin/blob/master/benchmarks/src/main/scala/io/odin/Benchmarks.scala)
 results reflect comparison of:
- - log4j file loggers with enabled tracing
- - Odin file loggers
- - scribe file loggers 
- 
-Lower number is better: 
+
+- log4j file loggers with enabled tracing
+- Odin file loggers
+- scribe file loggers
+
+Lower number is better:
 
 ```
 -- log4j
@@ -881,14 +910,14 @@ MacBook Pro (13-inch, 2018)
 
 Odin outperforms log4j by the order of magnitude, although scribe does it even better. Mind that due to
 safety guarantees default file logger in Odin is flushed after each record, so it's recommended to use it in combination
-with async logger to achieve the maximum performance. 
+with async logger to achieve the maximum performance.
 
-Adopters
----
+## Adopters
+
 - [Zalando](https://jobs.zalando.com/en/tech)
 
-Contributing
----
+## Contributing
+
 Feel free to open an issue, submit a Pull Request or ask [in the Gitter channel](https://gitter.im/valskalla/odin).
 We strive to provide a welcoming environment for everyone with good intentions.
 
@@ -896,15 +925,15 @@ Also, don't hesitate to give it a star and spread the word to your friends and c
 
 Odin is maintained by [Sergey Kolbasov](https://github.com/sergeykolbasov) and [Aki Huttunen](https://github.com/Doikor).
 
-Acknowledgements
----
+## Acknowledgements
+
 - [scribe](https://github.com/outr/scribe/) logging framework as a source of performance optimizations and inspiration
 - [sourcecode](https://github.com/lihaoyi/sourcecode) is _the_ library for position tracing in compile-time
 - [cats-effect](https://github.com/typelevel/cats-effect) as a repository of all the nice type classes to describe effects
 - [sbt-ci-release](https://github.com/olafurpg/sbt-ci-release) for the smooth experience with central Maven releases from CI
 
-License
----
+## License
+
 Licensed under the **[Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)** (the "License");
 you may not use this software except in compliance with the License.
 
