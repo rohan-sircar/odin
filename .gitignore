@@ -7,3 +7,6 @@ target/
 .bloop
 /project/metals.sbt
 null/
+metals.sbt
+.bsp
+.vscode
