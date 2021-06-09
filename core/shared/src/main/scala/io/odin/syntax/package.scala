@@ -66,11 +66,11 @@ package object syntax {
     /**
       * Create logger that hashes context value given that context key matches one of the arguments
       */
-    // def withSecretContext(
-    //     key: String,
-    //     keys: String*
-    // )(implicit clock: Clock[F], monad: Monad[F]): Logger[F] =
-    //   logger.contramap(SecretLogger(Set(key) ++ keys))
+    def withSecretContext(
+        key: String,
+        keys: String*
+    )(implicit clock: Clock[F], monad: Monad[F]): Logger[F] =
+      logger.contramap(SecretLogger(Set(key) ++ keys))
   }
 
   /**
@@ -120,11 +120,11 @@ package object syntax {
     /**
       * Create logger that hashes context value given that context key matches one of the arguments
       */
-    // def withSecretContext(
-    //     key: String,
-    //     keys: String*
-    // )(implicit timer: Clock[F], monad: Monad[F]): Resource[F, Logger[F]] =
-    //   resource.map(logger => logger.contramap(SecretLogger(Set(key) ++ keys)))
+    def withSecretContext(
+        key: String,
+        keys: String*
+    )(implicit timer: Clock[F], monad: Monad[F]): Resource[F, Logger[F]] =
+      resource.map(logger => logger.contramap(SecretLogger(Set(key) ++ keys)))
   }
 
   implicit class RenderInterpolator(private val sc: StringContext) extends AnyVal {
