@@ -1,7 +1,7 @@
 Note: this branch is just the PR by @mprevel https://github.com/valskalla/odin/pull/162
 updated to a newer master commit, that I had used in one of my my scala.js projects but
 never uploaded before. All credits for these changes go to him, in my dumbness I
-accidentally merged his branch into master, instead of the other way aroundn and the
+accidentally merged his branch into master, instead of the other way around and the
 commits got squashed.
 
 So here it is, original description as follows:
